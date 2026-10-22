@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly Calendar Generator</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px 16px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #111;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+  }
+
+  .container { width: 100%; max-width: 420px; }
+
+  h1 {
+    margin: 0 0 24px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    outline: none;
+  }
+  input:focus { border-color: #111; }
+
+  button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    color: #fff;
+    background: #111;
+    border: 1px solid #111;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.85; }
+  button.reset { color: #111; background: #fff; border-color: #ddd; }
+  button.reset:hover { border-color: #111; opacity: 1; }
+
+  #error {
+    min-height: 18px;
+    margin: 4px 0 12px;
+    font-size: 13px;
+    color: #c00;
+  }
+
+  h2 {
+    margin: 16px 0 12px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  th {
+    padding: 8px 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #888;
+    border-bottom: 1px solid #111;
+  }
+
+  td {
+    padding: 12px 0;
+    text-align: center;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+  }
+
+  td.sunday { color: #888; }
+  td.today { background: #111; color: #fff; }
+  td:not(.empty):hover { background: #f2f2f2; }
+  td.today:hover { background: #111; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Monthly Calendar</h1>
+
+  <div class="controls">
+    <input type="number" id="year" placeholder="Year (e.g. 2026)">
+    <input type="number" id="month" placeholder="Month (1-12)" min="1" max="12">
+  </div>
+  <div class="controls">
+    <button onclick="generateCalendar()">Generate Calendar</button>
+    <button class="reset" onclick="resetCalendar()">Reset</button>
+  </div>
+
+  <p id="error"></p>
+  <div id="calendar"></div>
+</div>
+
+<script>
+  const monthNames = ["January","February","March","April","May","June",
+                      "July","August","September","October","November","December"];
+
+  function generateCalendar() {
+    const year = parseInt(document.getElementById("year").value);
+    const month = parseInt(document.getElementById("month").value);
+    const error = document.getElementById("error");
+    const out = document.getElementById("calendar");
+
+    if (isNaN(year) || year < 1 || isNaN(month) || month < 1 || month > 12) {
+      error.textContent = "Please enter a valid year and a month between 1 and 12.";
+      out.innerHTML = "";
+      return;
+    }
+    error.textContent = "";
+
+    const firstDay = new Date(year, month - 1, 1).getDay();   
+    const daysInMonth = new Date(year, month, 0).getDate();   
+    const today = new Date();
+
+    let html = "<h2>" + monthNames[month - 1] + " " + year + "</h2><table><tr>";
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => html += "<th>" + d + "</th>");
+    html += "</tr><tr>";
+
+    for (let i = 0; i < firstDay; i++) html += '<td class="empty"></td>';
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const col = (firstDay + day - 1) % 7;
+      let cls = col === 0 ? "sunday" : "";
+      if (day === today.getDate() && month - 1 === today.getMonth() && year === today.getFullYear()) {
+        cls += " today";
+      }
+      html += '<td class="' + cls + '">' + day + "</td>";
+      if (col === 6 && day !== daysInMonth) html += "</tr><tr>";
+    }
+
+    // empty cells to finish the last row
+    const remaining = (7 - (firstDay + daysInMonth) % 7) % 7;
+    for (let i = 0; i < remaining; i++) html += '<td class="empty"></td>';
+
+    html += "</tr></table>";
+    out.innerHTML = html;
+  }
+
+  function resetCalendar() {
+    document.getElementById("year").value = "";
+    document.getElementById("month").value = "";
+    document.getElementById("error").textContent = "";
+    document.getElementById("calendar").innerHTML = "";
+  }
+</script>
+</body>
+</html>
